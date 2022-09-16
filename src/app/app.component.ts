@@ -2,7 +2,6 @@ import { AfterViewInit, Component } from '@angular/core';
 import { GeoJsonObject } from 'geojson';
 import * as L from 'leaflet';
 import { circle, latLng, LeafletMouseEvent, marker, polygon, tileLayer } from 'leaflet';
-import 'leaflet.tilelayer.colorfilter';
 import { MarkerService } from './marker.service';
 import { ShapeService } from './shape.service';
 
