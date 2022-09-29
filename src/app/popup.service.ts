@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 export class PopupService {
   makeCapitalPopup(data: any): string {
     return `` +
-      `<div>Capital: ${ data.name }</div>` +
+      `<h3>RUBIX</h3>` +
       `<div>State: ${ data.state }</div>` +
       `<div>Population: ${ data.population }</div>`
   }
