@@ -64,7 +64,7 @@ export class AppComponent implements AfterViewInit {
     this.markerService.makeCapitalMarkers(this.#map);
     this.shapeService.getStateShapes().subscribe(states => {
       this.#states = states;
-      this.initStatesLayer();
+      this.initCountriesLayer();
     });
   }
 
@@ -72,7 +72,7 @@ export class AppComponent implements AfterViewInit {
     this.#map = map;
   }
 
-  private initStatesLayer() {
+  private initCountriesLayer() {
     const stateLayer = L.geoJSON(this.#states, {
       style: (feature) => ({
         weight: 1,
