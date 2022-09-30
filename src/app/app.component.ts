@@ -1,7 +1,8 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, Renderer2, ViewContainerRef } from '@angular/core';
 import { GeoJsonObject } from 'geojson';
 import * as L from 'leaflet';
 import { circle, latLng, LeafletMouseEvent, marker, polygon, tileLayer } from 'leaflet';
+import { CustomPopupComponent } from './custom-popup/custom-popup.component';
 import { MarkerService } from './marker.service';
 import { ShapeService } from './shape.service';
 
@@ -58,10 +59,12 @@ export class AppComponent implements AfterViewInit {
   constructor(
     private markerService: MarkerService,
     private shapeService: ShapeService,
+    private renderer: Renderer2,
+    private viewContainerRef: ViewContainerRef,
   ) { }
 
   ngAfterViewInit(): void {
-    this.markerService.makeCapitalMarkers(this.#map);
+    this.markerService.makeCapitalMarkers(this.#map, this.makeCapitalPopup());
     this.shapeService.getStateShapes().subscribe(states => {
       this.#states = states;
       this.initCountriesLayer();
@@ -101,6 +104,13 @@ export class AppComponent implements AfterViewInit {
       fillOpacity: 0.8,
       // fillColor: '#051E50'
     });
+  }
+
+  private makeCapitalPopup(): HTMLDivElement {
+    const popupElement: HTMLDivElement = this.renderer.createElement('div');
+    const componentRef = this.viewContainerRef.createComponent(CustomPopupComponent);
+    popupElement.appendChild(componentRef.location.nativeElement);
+    return popupElement;
   }
 
   private resetFeature(e: LeafletMouseEvent) {

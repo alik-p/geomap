@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import * as L from 'leaflet';
 import { take } from 'rxjs';
-import { PopupService } from './popup.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,10 +11,9 @@ export class MarkerService {
 
   constructor(
     private httpClient: HttpClient,
-    private popupService: PopupService,
   ) { }
 
-  makeCapitalMarkers(map: L.Map): void {
+  makeCapitalMarkers(map: L.Map, popup: HTMLDivElement): void {
     this.httpClient.get(this.capitals)
       .pipe(take(1))
       .subscribe((res: any) => {
@@ -23,9 +21,9 @@ export class MarkerService {
           const lon = c.geometry.coordinates[0];
           const lat = c.geometry.coordinates[1];
           const marker = L.marker([lat, lon]);
-          marker.bindPopup(this.popupService.makeCapitalPopup(c.properties), { closeButton: false });
+          marker.bindPopup(popup, { closeButton: false });
           marker.on('mouseover', () => { marker.openPopup(); });
-          marker.on('mouseout', () => { marker.closePopup(); });
+          // marker.on('mouseout', () => { marker.closePopup(); });
           marker.addTo(map);
         }
       });
