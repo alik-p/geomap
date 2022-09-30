@@ -9,7 +9,7 @@ import { map, Observable } from 'rxjs';
 export class ShapeService {
   constructor(private httpClient: HttpClient) { }
 
-  getStateShapes(): Observable<GeoJsonObject> {
+  getCountryShapes(): Observable<GeoJsonObject> {
     // Europe:
     return this.httpClient.get('/assets/data/europe.medium.geo.json').pipe(
       map(res => res as GeoJsonObject)

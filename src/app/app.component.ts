@@ -1,9 +1,10 @@
+import { HttpClient } from '@angular/common/http';
 import { AfterViewInit, Component, Renderer2, ViewContainerRef } from '@angular/core';
 import { GeoJsonObject } from 'geojson';
 import * as L from 'leaflet';
 import { circle, latLng, LeafletMouseEvent, marker, polygon, tileLayer } from 'leaflet';
+import { take } from 'rxjs';
 import { CustomPopupComponent } from './custom-popup/custom-popup.component';
-import { MarkerService } from './marker.service';
 import { ShapeService } from './shape.service';
 
 const iconRetinaUrl = 'assets/img/map-pin.png';
@@ -57,15 +58,15 @@ export class AppComponent implements AfterViewInit {
   #states!: GeoJsonObject;
 
   constructor(
-    private markerService: MarkerService,
+    private httpClient: HttpClient,
     private shapeService: ShapeService,
     private renderer: Renderer2,
     private viewContainerRef: ViewContainerRef,
   ) { }
 
   ngAfterViewInit(): void {
-    this.markerService.makeCapitalMarkers(this.#map, this.makeCapitalPopup());
-    this.shapeService.getStateShapes().subscribe(states => {
+    this.makeCapitalMarkers(this.#map);
+    this.shapeService.getCountryShapes().subscribe(states => {
       this.#states = states;
       this.initCountriesLayer();
     });
@@ -86,17 +87,17 @@ export class AppComponent implements AfterViewInit {
       }),
       onEachFeature: (feature, layer) => (
         layer.on({
-          click: (e) => (this.selectFeature(e)),
-          mouseover: (e) => (this.highlightFeature(e)),
-          mouseout: (e) => (this.resetFeature(e)),
+          click: (event) => (this.selectCountry(event)),
+          mouseover: (event) => (this.highlightCountry(event)),
+          mouseout: (event) => (this.resetCountryStyle(event)),
         })
       )
     });
     this.#map.addLayer(stateLayer);
   }
 
-  private highlightFeature(e: LeafletMouseEvent) {
-    const layer = e.target;
+  private highlightCountry(event: LeafletMouseEvent) {
+    const layer = event.target;
     layer.setStyle({
       weight: 2,
       opacity: 1.0,
@@ -106,15 +107,32 @@ export class AppComponent implements AfterViewInit {
     });
   }
 
-  private makeCapitalPopup(): HTMLDivElement {
+  private makeCapitalMarkers(map: L.Map): void {
+    this.httpClient.get('/assets/data/europe-capitals.geo.json')
+      .pipe(take(1))
+      .subscribe((res: any) => {
+        for (const feature of res.features) {
+          const lon = feature.geometry.coordinates[0];
+          const lat = feature.geometry.coordinates[1];
+          const marker = L.marker([lat, lon]);
+          marker.bindPopup(this.makeCapitalPopup(feature.properties?.capital), { closeButton: false });
+          marker.on('mouseover', () => { marker.openPopup(); });
+          // marker.on('mouseout', () => { marker.closePopup(); });
+          marker.addTo(map);
+        }
+      });
+  }
+
+  private makeCapitalPopup(name: string): HTMLDivElement {
     const popupElement: HTMLDivElement = this.renderer.createElement('div');
     const componentRef = this.viewContainerRef.createComponent(CustomPopupComponent);
+    componentRef.instance.capital = name;
     popupElement.appendChild(componentRef.location.nativeElement);
     return popupElement;
   }
 
-  private resetFeature(e: LeafletMouseEvent) {
-    const layer = e.target;
+  private resetCountryStyle(event: LeafletMouseEvent) {
+    const layer = event.target;
     // TODO improve:
     if (layer === this.#selectedLayer) {
       return;
@@ -128,8 +146,8 @@ export class AppComponent implements AfterViewInit {
     });
   }
 
-  private selectFeature(e: LeafletMouseEvent) {
-    const layer = e.target;
+  private selectCountry(event: LeafletMouseEvent) {
+    const layer = event.target;
     this.#selectedLayer = layer;
     layer.setStyle({
       weight: 5,
@@ -138,5 +156,10 @@ export class AppComponent implements AfterViewInit {
       fillOpacity: 1.0,
       fillColor: '#051E50',
     });
+    this.zoomToCountry(event);
+  }
+
+  private zoomToCountry(event: LeafletMouseEvent): void {
+    this.#map.fitBounds(event.target.getBounds());
   }
 }

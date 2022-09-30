@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+export interface DialogData {
+  capital: string;
+}
 
 @Component({
   selector: 'app-dialog',
@@ -6,4 +11,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./dialog.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DialogComponent {}
+export class DialogComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+}
