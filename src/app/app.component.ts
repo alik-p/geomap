@@ -108,7 +108,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   private makeCapitalMarkers(map: L.Map): void {
-    this.httpClient.get('/assets/data/europe-capitals.geo.json')
+    this.httpClient.get('assets/data/europe-capitals.geo.json')
       .pipe(take(1))
       .subscribe((res: any) => {
         for (const feature of res.features) {
