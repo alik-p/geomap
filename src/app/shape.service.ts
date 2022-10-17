@@ -11,7 +11,7 @@ export class ShapeService {
 
   getCountryShapes(): Observable<GeoJsonObject> {
     // Europe:
-    return this.httpClient.get('/assets/data/europe.medium.geo.json').pipe(
+    return this.httpClient.get('assets/data/europe.medium.geo.json').pipe(
       map(res => res as GeoJsonObject)
     );
   }
