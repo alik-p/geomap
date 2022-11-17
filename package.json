@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:github": "ng build --output-path docs --base-href https://alik-p.github.io/geomap/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
