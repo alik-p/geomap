@@ -1,5 +1,11 @@
 <div class="panel">
-  <input type="text" placeholder="Search...">
+  <mat-form-field appearance="outline">
+    <mat-select (valueChange)="onSelectCountry($event)" placeholder="Country">
+      <mat-option *ngFor="let country of countryNames()" [value]="country">
+        {{ country }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>
 <div class="map-container">
   <div class="map-frame">
