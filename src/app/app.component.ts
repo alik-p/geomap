@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { AfterViewInit, Component, Renderer2, ViewContainerRef } from '@angular/core';
-import { GeoJsonObject } from 'geojson';
+import { FeatureCollection } from 'geojson';
 import * as L from 'leaflet';
-import { circle, latLng, LeafletMouseEvent, marker, polygon, tileLayer } from 'leaflet';
+import { circle, GeoJSON, latLng, marker, polygon, tileLayer } from 'leaflet';
 import { take } from 'rxjs';
 import { CustomPopupComponent } from './custom-popup/custom-popup.component';
 import { ShapeService } from './shape.service';
@@ -55,7 +55,9 @@ export class AppComponent implements AfterViewInit {
 
   #selectedLayer: any | null = null;
 
-  #states!: GeoJsonObject;
+  #countries!: FeatureCollection;
+
+  #countriesLayer!: GeoJSON;  // TODO add generic type
 
   constructor(
     private httpClient: HttpClient,
@@ -66,18 +68,33 @@ export class AppComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.makeCapitalMarkers(this.#map);
-    this.shapeService.getCountryShapes().subscribe(states => {
-      this.#states = states;
+    this.shapeService.getCountryShapes().subscribe(countries => {
+      this.#countries = countries;
       this.initCountriesLayer();
     });
+  }
+
+  countryNames(): string[] {
+    return this.#countries?.features.map(feature => feature.properties && feature.properties['geounit']).sort() || [];
   }
 
   onMapReady(map: L.Map): void {
     this.#map = map;
   }
 
+  onSelectCountry(country: string): void {
+    if (!!this.#selectedLayer) {
+      this.resetCountryStyle(this.#selectedLayer, true);
+    }
+    const countryLayer = this.#countriesLayer.getLayers().find(layer => {
+      // @ts-ignore
+      return layer.feature!['properties']!['geounit']! === country;
+    });
+    this.selectCountry(countryLayer as GeoJSON);
+  }
+
   private initCountriesLayer() {
-    const stateLayer = L.geoJSON(this.#states, {
+    this.#countriesLayer = L.geoJSON(this.#countries, {
       style: (feature) => ({
         weight: 1,
         opacity: 0.5,
@@ -87,17 +104,16 @@ export class AppComponent implements AfterViewInit {
       }),
       onEachFeature: (feature, layer) => (
         layer.on({
-          click: (event) => (this.selectCountry(event)),
-          mouseover: (event) => (this.highlightCountry(event)),
-          mouseout: (event) => (this.resetCountryStyle(event)),
+          click: (event) => (this.selectCountry(event.target)),
+          mouseover: (event) => (this.highlightCountry(event.target)),
+          mouseout: (event) => (this.resetCountryStyle(event.target)),
         })
       )
     });
-    this.#map.addLayer(stateLayer);
+    this.#map.addLayer(this.#countriesLayer);
   }
 
-  private highlightCountry(event: LeafletMouseEvent) {
-    const layer = event.target;
+  private highlightCountry(layer: GeoJSON) {
     layer.setStyle({
       weight: 2,
       opacity: 1.0,
@@ -131,10 +147,9 @@ export class AppComponent implements AfterViewInit {
     return popupElement;
   }
 
-  private resetCountryStyle(event: LeafletMouseEvent) {
-    const layer = event.target;
+  private resetCountryStyle(layer: GeoJSON, force = false) {
     // TODO improve:
-    if (layer === this.#selectedLayer) {
+    if (layer === this.#selectedLayer && !force) {
       return;
     }
     layer.setStyle({
@@ -146,8 +161,7 @@ export class AppComponent implements AfterViewInit {
     });
   }
 
-  private selectCountry(event: LeafletMouseEvent) {
-    const layer = event.target;
+  private selectCountry(layer: GeoJSON) {
     this.#selectedLayer = layer;
     layer.setStyle({
       weight: 5,
@@ -156,10 +170,10 @@ export class AppComponent implements AfterViewInit {
       fillOpacity: 1.0,
       fillColor: '#051E50',
     });
-    this.zoomToCountry(event);
+    this.zoomToCountry(layer);
   }
 
-  private zoomToCountry(event: LeafletMouseEvent): void {
-    this.#map.fitBounds(event.target.getBounds());
+  private zoomToCountry(layer: GeoJSON): void {
+    this.#map.fitBounds(layer.getBounds());
   }
 }

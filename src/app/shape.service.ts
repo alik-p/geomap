@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { GeoJsonObject } from 'geojson';
+import { FeatureCollection } from 'geojson';
 import { map, Observable } from 'rxjs';
 
 @Injectable({
@@ -9,10 +9,10 @@ import { map, Observable } from 'rxjs';
 export class ShapeService {
   constructor(private httpClient: HttpClient) { }
 
-  getCountryShapes(): Observable<GeoJsonObject> {
+  getCountryShapes(): Observable<FeatureCollection> {
     // Europe:
     return this.httpClient.get('assets/data/europe.medium.geo.json').pipe(
-      map(res => res as GeoJsonObject)
+      map(res => res as FeatureCollection)
     );
   }
 }
